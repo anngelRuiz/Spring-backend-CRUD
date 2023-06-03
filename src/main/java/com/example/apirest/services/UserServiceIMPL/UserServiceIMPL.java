@@ -37,7 +37,12 @@ public class UserServiceIMPL implements UserService {
     }
 
     @Override
-    public void DeleteUser(Long id) {
+    public void deleteById(Long id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existById(Long id) {
+        return userRepository.existsById(id);
     }
 }

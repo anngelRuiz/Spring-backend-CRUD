@@ -14,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/users")
 @CrossOrigin("http://localhost:3000")
 public class UserController {
 
@@ -59,9 +59,12 @@ public class UserController {
 
 
     @DeleteMapping(path = "/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id){
-        userServiceIMPL.DeleteUser(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Void> deleteUserById(@PathVariable Long id){
+        if(!userServiceIMPL.existById(id)){
+            throw new UserNotFoundException(id);
+        }
+        userServiceIMPL.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
 //    Approach 2
