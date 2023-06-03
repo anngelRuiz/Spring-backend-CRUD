@@ -6,6 +6,7 @@ import com.example.apirest.exceptions.GlobalExceptionHandler;
 import com.example.apirest.exceptions.UserNotFoundException;
 import com.example.apirest.services.UserServiceIMPL.UserServiceIMPL;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,8 +29,14 @@ public class UserController {
     }
 
     @GetMapping()
-    public List<User> getUsers(){
-        return userServiceIMPL.getUsers();
+    public ResponseEntity<List<User>> getUsers(){
+        List<User> users = userServiceIMPL.getUsers();
+
+        if(users.isEmpty()){
+            return ResponseEntity.noContent().cacheControl(CacheControl.noCache()).build();
+        }
+
+        return ResponseEntity.ok().cacheControl(CacheControl.noCache()).body(users);
     }
 
     @PostMapping
