@@ -1,7 +1,7 @@
 package com.example.apirest.services.UserServiceIMPL;
 
 import com.example.apirest.entity.User;
-import com.example.apirest.exceptions.ResourceNotFoundException;
+import com.example.apirest.exceptions.UserNotFoundException;
 import com.example.apirest.repository.UserRepository;
 import com.example.apirest.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,24 +31,9 @@ public class UserServiceIMPL implements UserService {
         return userRepository.save(user);
     }
 
-//    @Override
-//    public User findUser(Long id) {
-//        return userRepository.findById(id);
-//    }
-
-//    @Override
-//    public User findUser(Long id) throws ResourceNotFoundException {
-//        return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-//    }
-
     @Override
-    public User findUser(Long id) throws ResourceNotFoundException {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            return optionalUser.get();
-        } else {
-            throw new ResourceNotFoundException("User not found with id " + id);
-        }
+    public User getUserById(Long id) throws UserNotFoundException {
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
     }
 
     @Override
