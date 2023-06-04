@@ -39,6 +39,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
 
+    @ExceptionHandler(UserCreationException.class)
+    public ResponseEntity<ErrorResponse> handlerUserCreationException(UserCreationException ex){
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setErrorCode(HttpStatus.BAD_REQUEST.value());
+        errorResponse.setStatus(HttpStatus.BAD_REQUEST);
+        errorResponse.setErrorMessage("Failed to create user");
+        errorResponse.setErrorDetails(ex.getMessage());
+        errorResponse.setTimestamp(LocalDateTime.now());
+        errorResponse.setUrl(request.getRequestURL().toString());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
 //    @ExceptionHandler(value = { ResourceNotFoundException.class })
 //    protected ResponseEntity<Object> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
 //        ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));

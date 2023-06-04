@@ -1,17 +1,19 @@
 package com.example.apirest.controller;
 
 import com.example.apirest.entity.User;
-import com.example.apirest.exceptions.ErrorResponse;
+import com.example.apirest.entity.UserDTO;
 import com.example.apirest.exceptions.GlobalExceptionHandler;
+import com.example.apirest.exceptions.UserCreationException;
 import com.example.apirest.exceptions.UserNotFoundException;
 import com.example.apirest.services.UserServiceIMPL.UserServiceIMPL;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -19,12 +21,12 @@ import java.util.List;
 @CrossOrigin("http://localhost:3000")
 public class UserController {
 
-    @Autowired
-    UserServiceIMPL userServiceIMPL;
+    private final UserServiceIMPL userServiceIMPL;
 
     private final GlobalExceptionHandler globalExceptionHandler;
 
-    public UserController(GlobalExceptionHandler globalExceptionHandler){
+    public UserController(UserServiceIMPL userServiceIMPL ,GlobalExceptionHandler globalExceptionHandler){
+        this.userServiceIMPL = userServiceIMPL;
         this.globalExceptionHandler = globalExceptionHandler;
     }
 
@@ -40,16 +42,30 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user){
-        User userCreated = userServiceIMPL.createUser(user);
-        return new ResponseEntity<>(userCreated, HttpStatus.CREATED);
-        // return ResponseEntity.status(HttpStatus.CREATED).body(userCreated);
+    public ResponseEntity<?> createUser(@RequestBody @Valid User user, UriComponentsBuilder uriBuilder){
+        try{
+            User userCreated = userServiceIMPL.createUser(user);
+            UserDTO userDTO = convertToUserDTO(userCreated);
+            URI location = uriBuilder.path("/{id}").buildAndExpand(userCreated.getId()).toUri();
+            return ResponseEntity.created(location).body(userDTO);
+        }catch (UserCreationException ex){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(globalExceptionHandler.handlerUserCreationException(ex));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create user");
+        }
     }
 
     @PutMapping
     public ResponseEntity<?> updateUser(@RequestBody User user){
-        User userUpdated = userServiceIMPL.updateUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userUpdated);
+        try {
+            User userUpdated = userServiceIMPL.updateUser(user);
+            UserDTO userDTO = convertToUserDTO(userUpdated);
+            return ResponseEntity.ok(userDTO);
+        } catch (UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update user");
+        }
     }
 
     @GetMapping(path = "/{id}")
@@ -73,6 +89,28 @@ public class UserController {
         userServiceIMPL.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
+    private UserDTO convertToUserDTO(User user){
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setName(user.getName());
+        userDTO.setLastName(user.getLastName());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setAge(user.getAge());
+        userDTO.setGender(user.getGender());
+        userDTO.setDepartment(user.getDeparment());
+        return userDTO;
+    }
+
+//    private ResponseEntity<?> handlerUserException(Exception ex){
+//        if(ex instanceof UserNotFoundException){
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(globalExceptionHandler.handlerUserNotFoundException((UserNotFoundException) ex));
+//        }else if(ex instanceof NumberFormatException){
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(globalExceptionHandler.handlerNumberFormatException((NumberFormatException) ex));
+//        }else{
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get User");
+//        }
+//    }
 
 //    Approach 2
 //    @GetMapping(path = "/{id}")
