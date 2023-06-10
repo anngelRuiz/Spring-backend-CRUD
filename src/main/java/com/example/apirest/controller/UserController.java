@@ -56,7 +56,7 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<?> updateUser(@RequestBody User user){
+    public ResponseEntity<?> updateUser(@Valid @RequestBody User user){
         try {
             User userUpdated = userServiceIMPL.updateUser(user);
             UserDTO userDTO = convertToUserDTO(userUpdated);
