@@ -55,18 +55,25 @@ public class UserController {
         }
     }
 
-    @PutMapping
-    public ResponseEntity<?> updateUser(@Valid @RequestBody User user){
+    @PutMapping(path = "{id}")
+    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @RequestBody @Valid User user){
         try {
-            User userUpdated = userServiceIMPL.updateUser(user);
-            UserDTO userDTO = convertToUserDTO(userUpdated);
-            return ResponseEntity.ok(userDTO);
-        } catch (UserNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+            if(userServiceIMPL.existById(id)){
+                User userUpdated = userServiceIMPL.updateUser(user);
+                UserDTO userDTO = convertToUserDTO(userUpdated);
+                return ResponseEntity.ok(userDTO);
+            }else{
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+        } catch (UserNotFoundException ex){ //NoSuchElementException  general purpose
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(globalExceptionHandler.handlerUserNotFoundException(ex));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update user");
         }
     }
+
+//    @PutMapping(path = "{id}")
+//    public ResponseEntity<?> updateUser(@PathVariable("id") Long id, @Valid @RequestBody User user){
 
     @GetMapping(path = "/{id}")
     public ResponseEntity<?> getUser(@PathVariable("id") Long id) {
